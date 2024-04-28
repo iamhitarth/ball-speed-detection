@@ -12,7 +12,7 @@ export default function App() {
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isRecording, setIsRecording] = useState(false);
-  const cameraRef = useRef(null); // Add this line to create a ref
+  const cameraRef = useRef<Camera>(null); // Add this line to create a ref
 
   useEffect(() => {
     if (!hasPermission) {
@@ -34,43 +34,18 @@ export default function App() {
     );
 
   const startRecording = async () => {
-    if (cameraRef.current) {
-      setIsRecording(true);
-      const video = await cameraRef.current.startRecording({
-        onRecordingFinished: (video) => {
-          // Save the video to local storage
-          // You can use 'react-native-fs' or Expo's 'FileSystem' API to save the video file
-        },
-        onRecordingError: (error) => console.error(error),
-      });
-    }
+    setIsRecording(true);
+    await cameraRef.current.startRecording({
+      onRecordingFinished: (video) => console.log(video),
+      onRecordingError: (error) => console.error(error)
+    })
   };
 
   const stopRecording = async () => {
-    if (cameraRef.current && isRecording) {
-      const video = await cameraRef.current.stopRecording();
-      // Save the video to local storage
-      const uri = video.path; // This is the local URI to the recorded video
-      const newUri = FileSystem.documentDirectory + "video.mp4";
-      await FileSystem.moveAsync({
-        from: uri,
-        to: newUri,
-      });
-      setIsRecording(false);
-    }
+    await cameraRef.current.stopRecording();
+    setIsRecording(false);
   };
 
-  const saveVideo = async (videoUri) => {
-    const fileInfo = await FileSystem.getInfoAsync(videoUri);
-    if (fileInfo.exists) {
-      const newUri = FileSystem.documentDirectory + `${Date.now()}_video.mp4`;
-      await FileSystem.moveAsync({
-        from: videoUri,
-        to: newUri,
-      });
-      console.log("Video saved to:", newUri);
-    }
-  };
   return (
     <View style={styles.container}>
       <Camera
@@ -78,22 +53,26 @@ export default function App() {
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
-        video
+        video={true}
       />
-      {!isRecording && <View style={{ position: "absolute", bottom: 20 }}>
-        <Button
-          title="Start Recording"
-          onPress={startRecording}
-          disabled={isRecording}
-        />
-      </View>}
-      {isRecording && <View style={{ position: "absolute", bottom: 20 }}>
-        <Button
-          title="Stop Recording"
-          onPress={stopRecording}
-          disabled={!isRecording}
-        />
-      </View>}
+      {!isRecording && (
+        <View style={{ position: "absolute", bottom: 20 }}>
+          <Button
+            title="Start Recording"
+            onPress={startRecording}
+            disabled={isRecording}
+          />
+        </View>
+      )}
+      {isRecording && (
+        <View style={{ position: "absolute", bottom: 20 }}>
+          <Button
+            title="Stop Recording"
+            onPress={stopRecording}
+            disabled={!isRecording}
+          />
+        </View>
+      )}
     </View>
   );
 }
