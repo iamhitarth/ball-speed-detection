@@ -5,14 +5,16 @@ import {
   useCameraDevice,
   useCameraPermission,
   Camera,
+  useCameraFormat,
 } from "react-native-vision-camera";
-import * as MediaLibrary from 'expo-media-library';
+import * as MediaLibrary from "expo-media-library";
 
 export default function App() {
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<Camera>(null); // Add this line to create a ref
+  const format = useCameraFormat(device, [{ fps: 240 }]);
 
   useEffect(() => {
     if (!hasPermission) {
@@ -23,8 +25,8 @@ export default function App() {
   useEffect(() => {
     async function getPermissions() {
       const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
+      if (status !== "granted") {
+        alert("Sorry, we need camera roll permissions to make this work!");
       }
     }
     getPermissions();
@@ -43,18 +45,18 @@ export default function App() {
       </View>
     );
 
-    const startRecording = async () => {
-      setIsRecording(true);
-      await cameraRef.current.startRecording({
-        onRecordingFinished: async (video) => {
-          console.log(video);
-          const asset = await MediaLibrary.createAssetAsync(video.path);
-          await MediaLibrary.createAlbumAsync('BallSpeedDetection', asset, false);
-          console.log('Video saved to camera roll');
-        },
-        onRecordingError: (error) => console.error(error)
-      })
-    };
+  const startRecording = async () => {
+    setIsRecording(true);
+    await cameraRef.current.startRecording({
+      onRecordingFinished: async (video) => {
+        console.log(video);
+        const asset = await MediaLibrary.createAssetAsync(video.path);
+        await MediaLibrary.createAlbumAsync("BallSpeedDetection", asset, false);
+        console.log("Video saved to camera roll");
+      },
+      onRecordingError: (error) => console.error(error),
+    });
+  };
 
   const stopRecording = async () => {
     await cameraRef.current.stopRecording();
@@ -68,6 +70,8 @@ export default function App() {
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
+        fps={120}
+        format={format}
         video={true}
       />
       {!isRecording && (
