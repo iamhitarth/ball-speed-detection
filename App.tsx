@@ -1,11 +1,12 @@
 // import { StatusBar } from "expo-status-bar";
 import { useEffect, useState, useRef } from "react";
-import { Button, StyleSheet, Text, View } from "react-native";
+import { Button, StyleSheet, Text, View, Platform } from "react-native";
 import {
   useCameraDevice,
   useCameraPermission,
   Camera,
   useCameraFormat,
+  FormatFilter,
 } from "react-native-vision-camera";
 import * as MediaLibrary from "expo-media-library";
 
@@ -14,7 +15,12 @@ export default function App() {
   const { hasPermission, requestPermission } = useCameraPermission();
   const [isRecording, setIsRecording] = useState(false);
   const cameraRef = useRef<Camera>(null); // Add this line to create a ref
-  const format = useCameraFormat(device, [{ fps: 240 }]);
+  const iosReq: FormatFilter[] = [{ fps: 240 }];
+  const androidReq: FormatFilter[] = [{ videoResolution: "max" }];
+  const format = useCameraFormat(
+    device,
+    Platform.OS === "android" ? androidReq : iosReq
+  );
 
   useEffect(() => {
     if (!hasPermission) {
