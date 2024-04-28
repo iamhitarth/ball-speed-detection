@@ -70,7 +70,7 @@ export default function App() {
         style={StyleSheet.absoluteFill}
         device={device}
         isActive={true}
-        fps={120}
+        fps={240}
         format={format}
         video={true}
       />
