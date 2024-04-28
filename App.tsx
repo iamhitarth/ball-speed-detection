@@ -6,7 +6,7 @@ import {
   useCameraPermission,
   Camera,
 } from "react-native-vision-camera";
-import * as FileSystem from "expo-file-system";
+import * as MediaLibrary from 'expo-media-library';
 
 export default function App() {
   const device = useCameraDevice("back");
@@ -19,6 +19,16 @@ export default function App() {
       requestPermission().catch((error) => console.error(error));
     }
   }, [hasPermission, requestPermission]);
+
+  useEffect(() => {
+    async function getPermissions() {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+    getPermissions();
+  }, []);
 
   if (!hasPermission)
     return (
@@ -33,13 +43,18 @@ export default function App() {
       </View>
     );
 
-  const startRecording = async () => {
-    setIsRecording(true);
-    await cameraRef.current.startRecording({
-      onRecordingFinished: (video) => console.log(video),
-      onRecordingError: (error) => console.error(error)
-    })
-  };
+    const startRecording = async () => {
+      setIsRecording(true);
+      await cameraRef.current.startRecording({
+        onRecordingFinished: async (video) => {
+          console.log(video);
+          const asset = await MediaLibrary.createAssetAsync(video.path);
+          await MediaLibrary.createAlbumAsync('BallSpeedDetection', asset, false);
+          console.log('Video saved to camera roll');
+        },
+        onRecordingError: (error) => console.error(error)
+      })
+    };
 
   const stopRecording = async () => {
     await cameraRef.current.stopRecording();
